@@ -83,3 +83,136 @@ function startHeaderClock() {
 }
 
 window.addEventListener('DOMContentLoaded', init);
+
+// =============================================
+// SEARCH LOGIC
+// =============================================
+
+/**
+ * Triggered when user clicks "Search Weather" button.
+ * Validates input, then fetches weather data for the typed city.
+ */
+function searchCity() {
+  const input = document.getElementById('city-input');
+  const city = input.value.trim();
+
+  // Validation: empty input
+  if (!city) {
+    showPopup('⚠️', 'Empty Search', 'Please enter a city name before searching.');
+    return;
+  }
+
+  // Validation: suspicious/numeric-only
+  if (/^\d+$/.test(city)) {
+    showPopup('⚠️', 'Invalid Input', 'City name cannot be only numbers. Please enter a valid city name.');
+    return;
+  }
+
+  // Validation: too short
+  if (city.length < 2) {
+    showPopup('⚠️', 'Too Short', 'Please enter at least 2 characters for the city name.');
+    return;
+  }
+
+  hideDropdown();
+  fetchWeatherByCity(city);
+}
+
+/**
+ * Handles Enter key press on the search input.
+ */
+function handleKeyDown(event) {
+  if (event.key === 'Enter') {
+    searchCity();
+  }
+}
+
+/**
+ * Fetches current weather and 5-day forecast by city name.
+ * @param {string} city - City name string
+ */
+async function fetchWeatherByCity(city) {
+  showLoading(true);
+  try {
+    const [currentRes, forecastRes] = await Promise.all([
+      fetch(`${BASE_URL}/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`),
+      fetch(`${BASE_URL}/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`)
+    ]);
+
+    await handleAPIResponse(currentRes, forecastRes);
+  } catch (err) {
+    showLoading(false);
+    showPopup('🌐', 'Network Error', 'Could not connect to the weather service. Please check your internet connection and try again.');
+  }
+}
+
+/**
+ * Uses the browser's Geolocation API to get user's current location,
+ * then fetches weather for those coordinates.
+ */
+function useCurrentLocation() {
+  if (!navigator.geolocation) {
+    showPopup('📍', 'Not Supported', 'Geolocation is not supported by your browser. Please search by city name instead.');
+    return;
+  }
+
+  showLoading(true);
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      try {
+        const [currentRes, forecastRes] = await Promise.all([
+          fetch(`${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`),
+          fetch(`${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`)
+        ]);
+        await handleAPIResponse(currentRes, forecastRes);
+      } catch (err) {
+        showLoading(false);
+        showPopup('🌐', 'Network Error', 'Could not connect to the weather service. Please check your internet connection and try again.');
+      }
+    },
+    (error) => {
+      showLoading(false);
+      const msgs = {
+        1: 'Location access was denied. Please allow location access in your browser settings.',
+        2: 'Your location could not be determined. Please try searching by city name.',
+        3: 'Location request timed out. Please try again or search by city name.'
+      };
+      showPopup('📍', 'Location Error', msgs[error.code] || 'An unknown location error occurred.');
+    }
+  );
+}
+
+/**
+ * Handles API responses for both current weather and forecast.
+ * Shows appropriate error messages for non-200 responses.
+ */
+async function handleAPIResponse(currentRes, forecastRes) {
+  showLoading(false);
+
+  if (currentRes.status === 401) {
+    showPopup('🔑', 'API Key Error', 'Invalid API key. Please check your OpenWeatherMap API key in app.js.');
+    return;
+  }
+
+  if (currentRes.status === 404) {
+    showPopup('🔍', 'City Not Found', 'We couldn\'t find that city. Please check the spelling and try again. Example: "London", "New York", "Tokyo".');
+    return;
+  }
+
+  if (!currentRes.ok || !forecastRes.ok) {
+    showPopup('🌩', 'API Error', `Something went wrong (Error ${currentRes.status}). Please try again shortly.`);
+    return;
+  }
+
+  const currentData = await currentRes.json();
+  const forecastData = await forecastRes.json();
+
+  currentWeatherData = currentData;
+  displayCurrentWeather(currentData);
+  displayForecast(forecastData);
+
+  // Save to recent searches
+  addRecentCity(currentData.name + ', ' + currentData.sys.country);
+}
