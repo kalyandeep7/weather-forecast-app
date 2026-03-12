@@ -281,3 +281,11 @@ function displayCurrentWeather(data) {
     alertEl.classList.add('hidden');
     document.getElementById('temp-alert').style.background = '';
   }
+ // Show card with animation
+  const card = document.getElementById('current-weather');
+  document.getElementById('empty-state').classList.add('hidden');
+  card.classList.remove('hidden');
+  card.classList.remove('animate-card-in');
+  void card.offsetWidth; // force reflow
+  card.classList.add('animate-card-in');
+}
