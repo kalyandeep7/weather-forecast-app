@@ -610,3 +610,57 @@ function showLoading(show) {
     spinner.classList.remove('flex');
   }
 }
+
+// =============================================
+// UTILITY HELPERS
+// =============================================
+
+/**
+ * Formats a Date object into a friendly display string for the weather card.
+ * Shows full weekday, date, month, year and local 12-hour time.
+ * @param {Date} date - City-local Date object
+ * @returns {string}
+ */
+function formatCityDate(date) {
+  const datePart = date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+  return `${datePart} · ${timePart}`;
+}
+
+/**
+ * Formats a Date object into a friendly display string (legacy, uses device local time).
+ * @param {Date} date
+ * @returns {string}
+ */
+function formatDate(date) {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+/**
+ * Converts a 2-letter ISO country code into a flag emoji.
+ * @param {string} countryCode - e.g. "GB", "IN", "US"
+ * @returns {string} flag emoji
+ */
+function getFlagEmoji(countryCode) {
+  if (!countryCode) return '';
+  return countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => String.fromCodePoint(127397 + char.charCodeAt(0)))
+    .join('');
+}
+// your code goes here
