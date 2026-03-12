@@ -216,3 +216,68 @@ async function handleAPIResponse(currentRes, forecastRes) {
   // Save to recent searches
   addRecentCity(currentData.name + ', ' + currentData.sys.country);
 }
+
+// =============================================
+// DISPLAY: CURRENT WEATHER
+// =============================================
+
+/**
+ * Renders the current weather card with all data from the API response.
+ * Updates dynamic background theme, temp alert, and weather icon.
+ * @param {Object} data - OpenWeatherMap current weather response
+ */
+function displayCurrentWeather(data) {
+  const { name, sys, main, weather, wind, visibility, timezone } = data;
+
+  // Save raw Kelvin temp for unit toggling
+  currentTempKelvin = main.temp + 273.15;
+
+  // Store city timezone offset (seconds from UTC) and restart clock
+  cityTimezoneOffset = timezone;
+  startHeaderClock();
+
+  // Compute the city's current local time using its UTC offset
+  const utcMs = Date.now() + new Date().getTimezoneOffset() * 60000;
+  const cityNow = new Date(utcMs + timezone * 1000);
+
+  // Elements
+  document.getElementById('city-name').textContent = name;
+  document.getElementById('country-flag').textContent = getFlagEmoji(sys.country);
+  // Show date in the city's local timezone
+  document.getElementById('current-date').textContent = formatCityDate(cityNow);
+  document.getElementById('weather-desc').textContent = weather[0].description;
+  document.getElementById('feels-like').textContent = `Feels like ${formatTemp(main.feels_like + 273.15)}`;
+  document.getElementById('humidity').textContent = `${main.humidity}%`;
+  document.getElementById('wind-speed').textContent = `${(wind.speed * 3.6).toFixed(1)} km/h`;
+  document.getElementById('visibility').textContent = visibility ? `${(visibility / 1000).toFixed(1)} km` : 'N/A';
+
+  // Current temp (respects selected unit)
+  document.getElementById('current-temp').textContent = formatTemp(currentTempKelvin);
+
+  // Weather icon & condition label
+  const condition = weather[0].main.toLowerCase();
+  document.getElementById('weather-icon-main').textContent = getWeatherEmoji(condition, weather[0].id);
+  document.getElementById('weather-condition-label').textContent = weather[0].main;
+
+  // Show/hide unit toggle
+  document.getElementById('unit-toggle-wrapper').classList.remove('hidden');
+
+  // Apply dynamic background theme
+  applyTheme(condition, weather[0].id);
+
+  // Extreme temp alert
+  const tempC = main.temp;
+  const alertEl = document.getElementById('temp-alert');
+  const alertText = document.getElementById('temp-alert-text');
+
+  if (tempC > 40) {
+    alertText.textContent = `🔥 Extreme heat in ${name}: ${tempC.toFixed(1)}°C — Stay hydrated and avoid prolonged sun exposure!`;
+    alertEl.classList.remove('hidden');
+  } else if (tempC < -10) {
+    alertText.textContent = `🥶 Extreme cold in ${name}: ${tempC.toFixed(1)}°C — Dress warmly and limit time outdoors!`;
+    alertEl.classList.remove('hidden');
+    document.getElementById('temp-alert').style.background = 'linear-gradient(90deg, #3b82f6, #818cf8)';
+  } else {
+    alertEl.classList.add('hidden');
+    document.getElementById('temp-alert').style.background = '';
+  }
