@@ -289,3 +289,62 @@ function displayCurrentWeather(data) {
   void card.offsetWidth; // force reflow
   card.classList.add('animate-card-in');
 }
+
+// =============================================
+// DISPLAY: FORECAST
+// =============================================
+
+/**
+ * Renders the 5-day forecast section.
+ * Groups 3-hour interval data by day and picks midday entries.
+ * @param {Object} data - OpenWeatherMap forecast response
+ */
+function displayForecast(data) {
+  const dailyMap = {};
+
+  // Group by date, pick entries closest to midday (12:00)
+  data.list.forEach(item => {
+    const date = item.dt_txt.split(' ')[0];
+    const time = item.dt_txt.split(' ')[1];
+    if (!dailyMap[date] || time === '12:00:00') {
+      dailyMap[date] = item;
+    }
+  });
+
+  // Skip today, show next 5 days
+  const today = new Date().toISOString().split('T')[0];
+  const days = Object.keys(dailyMap).filter(d => d !== today).slice(0, 5);
+
+  const container = document.getElementById('forecast-cards');
+  container.innerHTML = '';
+
+  days.forEach((date, i) => {
+    const item = dailyMap[date];
+    const condition = item.weather[0].main.toLowerCase();
+    const emoji = getWeatherEmoji(condition, item.weather[0].id);
+    const tempK = item.main.temp + 273.15;
+    const day = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' });
+    const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    const card = document.createElement('div');
+    card.className = 'forecast-card animate-card-in';
+    card.style.animationDelay = `${i * 0.08}s`;
+    card.style.animationFillMode = 'both';
+    card.style.opacity = '0';
+
+    card.innerHTML = `
+      <p class="forecast-day">${day}</p>
+      <p class="forecast-date">${dateLabel}</p>
+      <div class="forecast-icon">${emoji}</div>
+      <p class="forecast-temp">${formatTemp(tempK)}</p>
+      <div class="forecast-meta">
+        <div class="forecast-meta-item">💧 <span>${item.main.humidity}%</span></div>
+        <div class="forecast-meta-item">💨 <span>${(item.wind.speed * 3.6).toFixed(1)} km/h</span></div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  const section = document.getElementById('forecast-section');
+  section.classList.remove('hidden');
+}
