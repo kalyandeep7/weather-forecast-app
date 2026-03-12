@@ -1,3 +1,6 @@
+Github rep - https://github.com/kalyandeep7/weather-forecast-app
+
+
 Weather Forecast Application - 
 This project is a simple weather dashboard created using HTML, Tailwind CSS, and JavaScript. The application allows users to search for weather information by city name or check the weather for their current location.
 
