@@ -494,3 +494,62 @@ function handleInputChange() {
     hideDropdown();
   }
 }
+
+// =============================================
+// DYNAMIC THEME
+// =============================================
+
+/**
+ * Applies a visual theme class to the body based on weather condition.
+ * Dynamic background changes per weather type (rainy, sunny, etc.)
+ * @param {string} condition - Lowercase weather condition string
+ * @param {number} id - OpenWeatherMap weather condition ID
+ */
+function applyTheme(condition, id) {
+  document.body.classList.remove('theme-rain', 'theme-sunny', 'theme-cloudy', 'theme-snow');
+
+  if (id >= 200 && id < 600 && id !== 800) {
+    // Thunderstorm (2xx), Drizzle (3xx), Rain (5xx)
+    if (id < 600) document.body.classList.add('theme-rain');
+  } else if (id >= 600 && id < 700) {
+    // Snow
+    document.body.classList.add('theme-snow');
+  } else if (id === 800) {
+    // Clear sky
+    document.body.classList.add('theme-sunny');
+  } else if (id >= 801 && id <= 804) {
+    // Cloudy
+    document.body.classList.add('theme-cloudy');
+  }
+}
+
+// =============================================
+// WEATHER ICONS (EMOJI)
+// =============================================
+
+/**
+ * Returns an emoji representing the weather condition.
+ * @param {string} condition - Lowercase condition string
+ * @param {number} id - OWM condition ID for fine-grained mapping
+ * @returns {string} emoji
+ */
+function getWeatherEmoji(condition, id) {
+  if (id >= 200 && id < 300) return '⛈️';
+  if (id >= 300 && id < 400) return '🌦️';
+  if (id >= 500 && id < 510) return '🌧️';
+  if (id >= 510 && id < 600) return '🌨️';
+  if (id >= 600 && id < 700) return '❄️';
+  if (id >= 700 && id < 800) return '🌫️';
+  if (id === 800) return '☀️';
+  if (id === 801) return '🌤️';
+  if (id === 802) return '⛅';
+  if (id >= 803) return '☁️';
+  // Fallback by string
+  if (condition.includes('thunder')) return '⛈️';
+  if (condition.includes('rain') || condition.includes('drizzle')) return '🌧️';
+  if (condition.includes('snow')) return '❄️';
+  if (condition.includes('cloud')) return '☁️';
+  if (condition.includes('clear')) return '☀️';
+  if (condition.includes('mist') || condition.includes('fog')) return '🌫️';
+  return '🌡️';
+}
