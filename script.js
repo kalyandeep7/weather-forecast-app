@@ -348,3 +348,44 @@ function displayForecast(data) {
   const section = document.getElementById('forecast-section');
   section.classList.remove('hidden');
 }
+
+
+// =============================================
+// UNIT TOGGLE
+// =============================================
+
+/**
+ * Sets temperature unit and refreshes displayed temperatures.
+ * Only affects the current weather display (per spec).
+ * @param {string} unit - 'C' or 'F'
+ */
+function setUnit(unit) {
+  currentUnit = unit;
+
+  document.getElementById('btn-celsius').classList.toggle('active-unit', unit === 'C');
+  document.getElementById('btn-fahrenheit').classList.toggle('active-unit', unit === 'F');
+
+  // Update current temp display
+  if (currentTempKelvin !== null) {
+    document.getElementById('current-temp').textContent = formatTemp(currentTempKelvin);
+
+    // Update feels-like
+    if (currentWeatherData) {
+      const feelsK = currentWeatherData.main.feels_like + 273.15;
+      document.getElementById('feels-like').textContent = `Feels like ${formatTemp(feelsK)}`;
+    }
+  }
+}
+
+/**
+ * Converts a Kelvin temperature to the current display unit string.
+ * @param {number} kelvin - Temperature in Kelvin
+ * @returns {string}
+ */
+function formatTemp(kelvin) {
+  if (currentUnit === 'C') {
+    return `${(kelvin - 273.15).toFixed(1)}°C`;
+  } else {
+    return `${((kelvin - 273.15) * 9 / 5 + 32).toFixed(1)}°F`;
+  }
+}
