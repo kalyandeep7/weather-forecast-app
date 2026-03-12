@@ -389,3 +389,108 @@ function formatTemp(kelvin) {
     return `${((kelvin - 273.15) * 9 / 5 + 32).toFixed(1)}°F`;
   }
 }
+
+// =============================================
+// RECENT CITIES
+// =============================================
+
+/**
+ * Adds a city to the recent searches list (stored in localStorage).
+ * Keeps only the 8 most recent unique cities.
+ * @param {string} city - City + country string (e.g. "London, GB")
+ */
+function addRecentCity(city) {
+  // Remove duplicate if exists
+  recentCities = recentCities.filter(c => c.toLowerCase() !== city.toLowerCase());
+  // Add to front
+  recentCities.unshift(city);
+  // Keep max 8
+  if (recentCities.length > 8) recentCities = recentCities.slice(0, 8);
+
+  localStorage.setItem('skypulse_recent', JSON.stringify(recentCities));
+  // Update input to show found city
+  document.getElementById('city-input').value = city.split(',')[0];
+}
+
+/** Loads recent cities from localStorage on app start. */
+function loadRecentCities() {
+  try {
+    recentCities = JSON.parse(localStorage.getItem('skypulse_recent')) || [];
+  } catch {
+    recentCities = [];
+  }
+}
+
+/** Shows the dropdown if there are recent cities to display. */
+function showDropdown() {
+  if (recentCities.length === 0) return;
+  const input = document.getElementById('city-input').value.toLowerCase();
+  renderDropdown(input);
+}
+
+/** Hides the dropdown menu. */
+function hideDropdown() {
+  document.getElementById('recent-dropdown').classList.add('hidden');
+}
+
+/**
+ * Filters and renders recent city dropdown based on current input.
+ * @param {string} filter - Lowercase filter string
+ */
+function renderDropdown(filter = '') {
+  const list = document.getElementById('recent-list');
+  const dropdown = document.getElementById('recent-dropdown');
+
+  const filtered = filter
+    ? recentCities.filter(c => c.toLowerCase().includes(filter))
+    : recentCities;
+
+  if (filtered.length === 0) {
+    dropdown.classList.add('hidden');
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(city => {
+    const li = document.createElement('li');
+    li.className = 'recent-item';
+    li.innerHTML = `
+      <span>🕐 ${city}</span>
+      <span class="recent-item-remove" onclick="removeRecentCity(event, '${city.replace(/'/g, "\\'")}')">✕</span>
+    `;
+    li.addEventListener('click', (e) => {
+      if (e.target.classList.contains('recent-item-remove')) return;
+      document.getElementById('city-input').value = city.split(',')[0];
+      hideDropdown();
+      fetchWeatherByCity(city.split(',')[0]);
+    });
+    list.appendChild(li);
+  });
+
+  dropdown.classList.remove('hidden');
+}
+
+/**
+ * Removes a city from the recent searches list.
+ * @param {Event} e - Click event (to stop propagation)
+ * @param {string} city - City string to remove
+ */
+function removeRecentCity(e, city) {
+  e.stopPropagation();
+  recentCities = recentCities.filter(c => c !== city);
+  localStorage.setItem('skypulse_recent', JSON.stringify(recentCities));
+  renderDropdown(document.getElementById('city-input').value.toLowerCase());
+  if (recentCities.length === 0) hideDropdown();
+}
+
+/** Called on input change to filter dropdown in real-time. */
+function handleInputChange() {
+  const val = document.getElementById('city-input').value.toLowerCase().trim();
+  if (val && recentCities.length > 0) {
+    renderDropdown(val);
+  } else if (!val && recentCities.length > 0) {
+    showDropdown();
+  } else {
+    hideDropdown();
+  }
+}
