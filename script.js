@@ -553,3 +553,60 @@ function getWeatherEmoji(condition, id) {
   if (condition.includes('mist') || condition.includes('fog')) return '🌫️';
   return '🌡️';
 }
+
+// =============================================
+// POPUP (Error / Info messages)
+// =============================================
+
+/**
+ * Displays a custom popup with an icon, title, and message.
+ * @param {string} icon - Emoji icon
+ * @param {string} title - Short title
+ * @param {string} message - Descriptive message
+ */
+function showPopup(icon, title, message) {
+  document.getElementById('popup-icon').textContent = icon;
+  document.getElementById('popup-title').textContent = title;
+  document.getElementById('popup-message').textContent = message;
+
+  const overlay = document.getElementById('popup-overlay');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+
+  // Reset animation
+  const box = document.getElementById('popup-box');
+  box.classList.remove('animate-popup');
+  void box.offsetWidth;
+  box.classList.add('animate-popup');
+}
+
+/** Closes the custom popup overlay. */
+function closePopup() {
+  const overlay = document.getElementById('popup-overlay');
+  overlay.classList.add('hidden');
+  overlay.classList.remove('flex');
+}
+
+// Close popup on backdrop click
+document.getElementById('popup-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closePopup();
+});
+
+// =============================================
+// LOADING STATE
+// =============================================
+
+/**
+ * Shows or hides the loading spinner in the sidebar.
+ * @param {boolean} show
+ */
+function showLoading(show) {
+  const spinner = document.getElementById('loading-spinner');
+  if (show) {
+    spinner.classList.remove('hidden');
+    spinner.classList.add('flex');
+  } else {
+    spinner.classList.add('hidden');
+    spinner.classList.remove('flex');
+  }
+}
