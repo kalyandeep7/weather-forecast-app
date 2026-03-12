@@ -1,15 +1,7 @@
-/**
- * KDInfo Weather Forecast Application
- * Uses OpenWeatherMap API for real-time weather data
- * Features: City search, geolocation, 5-day forecast, unit toggle,
- *           recent searches, dynamic themes, error handling, input validation
- */
-
 // =============================================
 // CONFIG
 // =============================================
 
-// Replace with your own OpenWeatherMap API key from https://openweathermap.org/api
 const API_KEY = "9e9effd5d00947a501b6bd5f2cf28818";
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
@@ -17,25 +9,20 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 // STATE
 // =============================================
 
-let currentUnit = 'C';           // 'C' or 'F'
-let currentTempKelvin = null;    // Raw temp in Kelvin for unit toggling
-let recentCities = [];           // Recently searched cities (from localStorage)
-let currentWeatherData = null;   // Latest weather response
-let cityTimezoneOffset = null;   // Timezone offset in seconds from UTC (from OWM)
-let clockInterval = null;        // Interval ID for the header clock
+let currentUnit = 'C';           
+let currentTempKelvin = null;    
+let recentCities = [];           
+let currentWeatherData = null;   
+let cityTimezoneOffset = null;   
+let clockInterval = null;       
 
 // =============================================
 // INIT
 // =============================================
 
-/**
- * Initialise the app on page load.
- * Loads saved recent cities, starts header clock, and attaches outside-click listener.
- */
 function init() {
   loadRecentCities();
-  startHeaderClock(); // Start clock with local time by default
-  // Close dropdown when clicking outside
+  startHeaderClock(); 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#city-input') && !e.target.closest('#recent-dropdown')) {
       hideDropdown();
@@ -43,18 +30,13 @@ function init() {
   });
 }
 
-/**
- * Starts (or restarts) the header clock.
- * When cityTimezoneOffset is set, shows the selected city's local time in 12hr format.
- * Otherwise shows the user's local device time.
- */
 function startHeaderClock() {
   if (clockInterval) clearInterval(clockInterval);
 
   function tick() {
     let now;
     if (cityTimezoneOffset !== null) {
-      // Compute city's local time: UTC + city offset
+    
       const utcMs = Date.now() + new Date().getTimezoneOffset() * 60000;
       now = new Date(utcMs + cityTimezoneOffset * 1000);
     } else {
@@ -88,10 +70,6 @@ window.addEventListener('DOMContentLoaded', init);
 // SEARCH LOGIC
 // =============================================
 
-/**
- * Triggered when user clicks "Search Weather" button.
- * Validates input, then fetches weather data for the typed city.
- */
 function searchCity() {
   const input = document.getElementById('city-input');
   const city = input.value.trim();
@@ -146,10 +124,7 @@ async function fetchWeatherByCity(city) {
   }
 }
 
-/**
- * Uses the browser's Geolocation API to get user's current location,
- * then fetches weather for those coordinates.
- */
+
 function useCurrentLocation() {
   if (!navigator.geolocation) {
     showPopup('📍', 'Not Supported', 'Geolocation is not supported by your browser. Please search by city name instead.');
@@ -663,4 +638,3 @@ function getFlagEmoji(countryCode) {
     .map(char => String.fromCodePoint(127397 + char.charCodeAt(0)))
     .join('');
 }
-// your code goes here
